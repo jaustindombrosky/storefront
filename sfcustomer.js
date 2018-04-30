@@ -13,8 +13,15 @@ function selection(){
     connection.query("SELECT * FROM products", function(err, res){
        if (err) throw err;
             var table = new bTable({
-                head: [""]
+                head: ["Item ID", "Product Name", "Department Name", "Price", "Stock Quantity"] 
+                colWidths: [15, 15, 15, 15, 15],
             });
+            for(var i = 0; i < res.length; i++){
+                table.push(
+                    [res[i].itemID, res[i].ProductName, res[i].DepartmentName, parseFloat(res[i].Price).toFixed(2), res[i].StockQuantity]
+                );
+            }
+            console.log(table.toString());
     })
 }
 

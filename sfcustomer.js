@@ -22,6 +22,22 @@ function selection(){
                 );
             }
             console.log(table.toString());
+            request.prompt([
+                {
+                    type: "number",
+                    message: "Purchase Item Here. (Item ID)",
+                    name: "itemNumber"
+                },
+                {
+                    type: "number",
+                    message: "How many would you like to purchase?",
+                    name: "howMany"
+                },
+
+            ]).then(function (user){
+                connection.query("SELECT * FROM products JOIN departments ON products.DepartmentName = departments.DepartmentName', function(err, res) {")
+
+            })
     })
 }
 

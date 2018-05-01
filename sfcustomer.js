@@ -4,66 +4,58 @@ var Table = require('cli-table');
 
 var connection = mysql.createConnection({
 	host: "localhost",
-	port: 3000,
+	port: 3306,
 	user: "root",
 	password: "",
 	database: "storefront"
 })
 
-var buy = function(){
-	connection.query('SELECT * FROM products', function(err, res){
-		var table = new Table({
-			head: ['ID', 'PRODUCTNAME', 'DEPARTMENT', 'PRICE', 'STOCK']
-		});
-		console.log("ITEMS FOR SALE!!!");
-		console.log("-----------------");
-		for(var i = 0; i < res.length; i++){
-			table.push([res[i].id, res[i].ProductName, res[i].DepartmentName, res[i].Price.toFixed(2), res[i].StockQuantity]);
-		}
-		console.log("-----------------");
-		console.log(table.toString());
-		inquirer.prompt([{
-			name: "itemId",
-			type: "input",
-			message: "What would you like to buy?",
-			validate: function(value){
-				if (isNaN(value) == false){
-					return true;
-				} else {
-					return false;
-				}
+function displayAll() {
+	connection.query('SELECT * FROM table', function(error, response) {
+			if (error) { console.log(error) };
+			var showTable = new Table({
+					head: ['ID', 'PRODUCTNAME', 'DEPARTMENT', 'PRICE', 'STOCK'],
+					colWidths: [10, 30, 18, 10, 14]
+			});
+			for (i = 0; i < response.length; i++) {
+					showTable.push(
+							[response[i].ItemID, response[i].ProductName, response[i].DepartmentName, response[i].Price, response[i].StockQuantity]
+					);
 			}
-		}, {
-			name: "Quantity",
-			type: "input",
-			message: "How many would you like to buy?",
-			validate: function(value){
-				if (isNaN(value) == false){
-					return true;
-				} else {
-					return false;
-				}
-			}
-		}]).then(function(answer){
-			var chosenId = answer.itemId -1
-			var chosenProduct = res[chosenId]
-			var total = parse
-		})
-	})
-}
-//asks if they would like to purchase another item
-function reprompt(){
-	inquirer.prompt([{
-	  type: "confirm",
-	  name: "reply",
-	  message: "Would you like to purchase another item?"
-	}]).then(function(ans){
-	  if(ans.reply){
-		start();
-	  } else{
-		console.log("See you soon!");
-	  }
+			console.log(showTable.toString());
+			firstPurchase();
 	});
-  }
-  
-  start();
+};
+function firstPurchase() {
+	inquirer.prompt([
+			{
+					name: "ID",
+					type: "input",
+					message: "What item number would you like to purchase?"
+			}, {
+					name: 'Quantity',
+					type: 'input',
+					message: "How many would you like to purchase?"
+			},
+
+	]).then(function(answers) {
+			var quantityDesired = answers.Quantity;
+			var IDDesired = answers.ID;
+			purchaseFromDatabase(IDDesired, quantityDesired);
+	});
+};
+function purchaseFromDatabase(ID, quantityNeeded) {
+	connection.query('SELECT * FROM table WHERE ItemID = ' + ID, function(error, response) {
+			if (error) { console.log(error) };
+			if (quantityNeeded <= response[0].StockQuantity) {
+					var totalCost = response[0].Price * quantityNeeded;
+					console.log("Order Updated!");
+					console.log("Your total is " + quantityNeeded + " " + response[0].ProductName + " is " + totalCost + ". Thank you for Shopping!");
+					connection.query('UPDATE Products SET StockQuantity = StockQuantity - ' + quantityNeeded + ' WHERE ItemID = ' + ID);
+			} else {
+					console.log("Out of Stock " + response[0].ProductName + " to fulfill your order.");
+			};
+			displayAll();
+	});
+};
+displayAll();

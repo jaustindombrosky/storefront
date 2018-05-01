@@ -1,88 +1,69 @@
 var mysql = require('mysql');
-var request = require('request');
-var colors = require('colors');
+var inquirer = require('inquirer');
 var Table = require('cli-table');
-var keys = require('./keys.js');
-var connection = mysql.createConnection(keys.connection);
 
-connection.connect(function(err) {
-    if (err) throw err;
-});
+var connection = mysql.createConnection({
+	host: "localhost",
+	port: 3000,
+	user: "root",
+	password: "",
+	database: "storefront"
+})
 
-function selection() {
-	connection.query('SELECT * FROM products', function(err, res) {
-	    if (err) throw err;
+var buy = function(){
+	connection.query('SELECT * FROM products', function(err, res){
 		var table = new Table({
-			head: ["Product ID".cyan, "Product Name".cyan, "Department Name".cyan, "Price".cyan, "Quantity".cyan],
-			colWidths: [13, 20, 20, 13, 13],
+			head: ['ID', 'PRODUCTNAME', 'DEPARTMENT', 'PRICE', 'STOCK']
 		});
-		for(var i = 0; i < res.length; i++) {
-			table.push(
-			    [res[i].itemID, res[i].ProductName, res[i].DepartmentName, parseFloat(res[i].Price).toFixed(2), res[i].StockQuantity]
-			);
+		console.log("ITEMS FOR SALE!!!");
+		console.log("-----------------");
+		for(var i = 0; i < res.length; i++){
+			table.push([res[i].id, res[i].ProductName, res[i].DepartmentName, res[i].Price.toFixed(2), res[i].StockQuantity]);
 		}
+		console.log("-----------------");
 		console.log(table.toString());
-		request.prompt([
-			{
-				type: "number",
-				message: "Which item would you like to purchase? (the Product ID)",
-				name: "itemNumber"
-			},
-			{
-				type: "number",
-				message: "How many would you like to buy?",
-				name: "howMany"
-			},
-		]).then(function (user) {
-            connection.query('SELECT * FROM products JOIN departments ON products.DepartmentName = departments.DepartmentName', function(err, res) {
-		    	if (err) throw err;
-		    	if(res[user.itemNumber - 1].StockQuantity > user.howMany) {
-		    		var newQuantity = parseInt(res[user.itemNumber - 1].StockQuantity) - parseInt(user.howMany);
-		    		var total = parseFloat(user.howMany) * parseFloat(res[user.itemNumber - 1].Price);
-			    	total = total.toFixed(2);
-			    	var departmentTotal = parseFloat(total) + parseFloat(res[user.itemNumber - 1].TotalSales);
-			    	departmentTotal = departmentTotal.toFixed(2);
-	    			connection.query("UPDATE departments SET ? WHERE ?", [{
-		    			TotalSales: departmentTotal
-		    		}, {
-		    			DepartmentName: res[user.itemNumber - 1].DepartmentName
-		    		}], function(error, results) {});
-		    		connection.query("UPDATE products SET ? WHERE ?", [{
-		    			StockQuantity: newQuantity
-		    		}, {
-		    			itemID: user.itemNumber
-		    		}], function(error, results) {
-		    			if(error) throw error;
-			    		console.log("Your order for " + user.howMany + " " + res[user.itemNumber - 1].ProductName +
-			    			"(s) has been placed.");
-			    		console.log("Your total is $" + total);
-			    		orderMore();
-		    		});
-		    	} else {
-		    		console.log("We're sorry, we only have " + res[user.itemNumber - 1].StockQuantity + " of that product.");
-		    		orderMore();
-		    	}	    
-			});
-		});	
+		inquirer.prompt([{
+			name: "itemId",
+			type: "input",
+			message: "What would you like to buy?",
+			validate: function(value){
+				if (isNaN(value) == false){
+					return true;
+				} else {
+					return false;
+				}
+			}
+		}, {
+			name: "Quantity",
+			type: "input",
+			message: "How many would you like to buy?",
+			validate: function(value){
+				if (isNaN(value) == false){
+					return true;
+				} else {
+					return false;
+				}
+			}
+		}]).then(function(answer){
+			var chosenId = answer.itemId -1
+			var chosenProduct = res[chosenId]
+			var total = parse
+		})
+	})
+}
+//asks if they would like to purchase another item
+function reprompt(){
+	inquirer.prompt([{
+	  type: "confirm",
+	  name: "reply",
+	  message: "Would you like to purchase another item?"
+	}]).then(function(ans){
+	  if(ans.reply){
+		start();
+	  } else{
+		console.log("See you soon!");
+	  }
 	});
-}
-function orderMore() {
-	request.prompt([
-		{
-			type: "confirm",
-			message: "Would you like to order anything else?",
-			name: "again"
-		},
-	]).then(function (user) {
-		if(user.again) {
-			selection();
-		} else {
-			exit();
-		}
-	});
-}
-function exit() {
-	connection.end();
-	console.log("Have a great day!");
-}
-selection();
+  }
+  
+  start();

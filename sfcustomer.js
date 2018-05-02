@@ -15,7 +15,7 @@ function displayAll() {
 			if (error) { console.log(error) };
 			var showTable = new Table({
 					head: ['ID', 'PRODUCTNAME', 'DEPARTMENT', 'PRICE', 'STOCK'],
-					colWidths: [10, 30, 18, 10, 14]
+					colWidths: [15, 15, 15, 15, 15]
 			});
 			for (i = 0; i < response.length; i++) {
 					showTable.push(
